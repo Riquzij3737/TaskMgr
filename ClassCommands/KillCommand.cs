@@ -5,10 +5,8 @@ using System.Diagnostics;
 
 public class KillCommand
 {
-    public void KillByName(string ProcessName, bool NotQuestion = false)
+    public void KillByName(string ProcessName, bool NotQuestion = false, bool force = false)
     {
-        var processoASerMatado = Process.GetProcessesByName(ProcessName);
-        
         if (String.IsNullOrWhiteSpace(ProcessName))
         {
             Console.WriteLine("pow mano, tu acha q eu faço milagre? como q eu vou adivinhar qual processo tu quer q eu mate, se tu nem especifica, ai é foda");
@@ -30,7 +28,7 @@ public class KillCommand
                 {
                     try
                     {
-                        processoASerMatado.ToList().ForEach(x => x.Kill());
+                        KillModes(Process.GetProcessesByName(ProcessName).First(), force);
                         return;
                     }
                     catch (Win32Exception)
@@ -43,13 +41,12 @@ public class KillCommand
                 {
                     Console.WriteLine("Ok, N irei fechar o processo");
                 }
-
             }
             else
             {
                 try
                 {
-                    processoASerMatado.ToList().ForEach(x => x.Kill());
+                    KillModes(Process.GetProcessesByName(ProcessName).First(), force);
                     return;
                 }
                 catch (Win32Exception)
@@ -61,7 +58,28 @@ public class KillCommand
         }
     }
 
-    public void KillMultiProcessUsingNames(string ListOfNames, bool NotQuestion = false)
+    public void KillModes(Process process, bool Force = false)
+    {
+        try
+        {
+            if (Force)
+            {
+                process.Kill();
+                return;
+            }
+            else
+            {
+                process.CloseMainWindow();
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Houve um erro interno");
+        }
+    }
+
+    public void KillMultiProcessUsingNames(string ListOfNames, bool NotQuestion = false, bool force = false)
     {
         if (String.IsNullOrWhiteSpace(ListOfNames))
         {
@@ -83,7 +101,7 @@ public class KillCommand
                 {
                     foreach (var ProcessName in ProcessNames)
                     {
-                        KillByName(ProcessName);    
+                        KillByName(ProcessName, NotQuestion, force);    
                     }
                 }
                 else
@@ -94,7 +112,7 @@ public class KillCommand
                     {
                         foreach (var ProcessName in ProcessNames)
                         { 
-                            KillByName(ProcessName);    
+                            KillByName(ProcessName, true, force);    
                         }                            
                     }
                     else
@@ -108,7 +126,7 @@ public class KillCommand
         } 
     }
 
-    public void KillByProcessID(int ProcessID, bool NotQuestion = false)
+    public void KillByProcessID(int ProcessID, bool NotQuestion = false, bool force = true)
     {
         if (ProcessID <= 0)
         {
@@ -119,7 +137,7 @@ public class KillCommand
         {
             if (Process.GetProcesses().Any(x => x.Id == ProcessID))
             {
-                KillByName(Process.GetProcessById(ProcessID).ProcessName, NotQuestion);
+                KillByName(Process.GetProcessById(ProcessID).ProcessName, NotQuestion, force);
             }
             else
             {
@@ -135,27 +153,33 @@ public class KillCommand
         Option<string> barraN = new("/n", "/Name");
         Option<string> barraMN = new("/mn", "/MultiNames");
         Option<int> BarraP = new("/p", "/Pid");
+        Option<bool> BarraNq = new("/nq", "/NotQuestion");
+        Option<bool> BarraF = new("/f", "/Force");
         
         killCommand.Add(BarraP);
         killCommand.Add(barraN);
         killCommand.Add(barraMN);
+        killCommand.Add(BarraNq);
+        killCommand.Add(BarraF);
         
         killCommand.SetAction((result) =>
         {
             var value1 = result.GetValue(BarraP);
             var value2 = result.GetValue(barraN);
             var value3 = result.GetValue(barraMN);
+            var  value4 = result.GetValue(BarraF);
+            var value5 = result.GetValue(BarraNq);
 
             if (String.IsNullOrWhiteSpace(value3))
             {
-                KillByName(value2);
+                KillByName(value2,value5,value4);
             } 
             else if (String.IsNullOrWhiteSpace(value2))
             {
-                KillMultiProcessUsingNames(value3);
+                KillMultiProcessUsingNames(value3, value5, value4);
             } else if (String.IsNullOrWhiteSpace(value2) || String.IsNullOrWhiteSpace(value3))
             {
-                KillByProcessID(value1);
+                KillByProcessID(value1,value5,value4);
             }
             else
             {

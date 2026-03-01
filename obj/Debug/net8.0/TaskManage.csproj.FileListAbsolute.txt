@@ -38,3 +38,4 @@ C:\Users\henri\Projetos Dotnet\Csharp\TaskManage\obj\Debug\net8.0\TaskManage.pdb
 C:\Users\henri\Projetos Dotnet\Csharp\TaskManage\obj\Debug\net8.0\TaskManage.genruntimeconfig.cache
 C:\Users\henri\Projetos Dotnet\Csharp\TaskManage\obj\Debug\net8.0\ref\TaskManage.dll
 C:\Users\henri\Projetos Dotnet\Csharp\TaskManage\bin\Debug\net8.0\Spectre.Console.dll
+C:\Users\henri\Projetos Dotnet\Csharp\TaskManage\obj\Debug\net8.0\TaskManage.sourcelink.json
