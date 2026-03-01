@@ -1,0 +1,12 @@
+﻿Id do processo: 3224
+Nome do Processo: code
+Caminho do arquivo processo: C:\Program Files\Microsoft VS Code\Code.exe
+Numero total de instancias do processo: 13
+Total de memoria usada pelo processo: 647mb
+Total de CPU usada pelo processo: 0
+
+
+
+HenriDev ¯\_(ツ)_/¯
+v ¯\_(ツ)_/¯
+

@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dgSpecHash": "zENZk395oTo=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\henri\\Projetos Dotnet\\Csharp\\TaskManage\\TaskManage.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\henri\\.nuget\\packages\\spectre.console\\0.54.0\\spectre.console.0.54.0.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\system.commandline\\2.0.3\\system.commandline.2.0.3.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\system.configuration.configurationmanager\\10.0.3\\system.configuration.configurationmanager.10.0.3.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.3\\system.diagnostics.eventlog.10.0.3.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\system.diagnostics.performancecounter\\10.0.3\\system.diagnostics.performancecounter.10.0.3.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\system.security.cryptography.protecteddata\\10.0.3\\system.security.cryptography.protecteddata.10.0.3.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\system.threading.accesscontrol\\10.0.3\\system.threading.accesscontrol.10.0.3.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.20\\microsoft.netcore.app.ref.8.0.20.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.20\\microsoft.windowsdesktop.app.ref.8.0.20.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.20\\microsoft.aspnetcore.app.ref.8.0.20.nupkg.sha512",
+    "C:\\Users\\henri\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.20\\microsoft.netcore.app.host.win-x64.8.0.20.nupkg.sha512"
+  ],
+  "logs": []
+}

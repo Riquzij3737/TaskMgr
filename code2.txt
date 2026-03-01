@@ -1,0 +1,17 @@
+﻿Id do processo: 7060
+Nome do Processo: cmd
+Caminho do arquivo processo: C:\WINDOWS\system32\cmd.exe
+Processo é privilegiado: true
+Numero total de instancias do processo: 0
+Numero total de threads do processo: 4
+Numero Total de modulos do processo: 0
+Memoria privada usada pelo processo: 5mb
+Memoria paginada usada pelo processo: 5mb
+Memoria virtual usada pelo processo: 2101307gb
+Memoria fisica usada pelo processo: 5mb
+Total de CPU usada pelo processo: 0,00%
+Total de disco usado pelo process: 0,00mbs
+
+
+
+HenriDev ¯\_(ツ)_/¯
