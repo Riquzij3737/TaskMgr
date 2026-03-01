@@ -1,7 +1,0 @@
-﻿Id do processo: 7404
-Nome do Processo: msedge
-Caminho do arquivo processo: C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
-Numero total de instancias do processo: 37
-Total de memoria usada pelo processo: 1759mb
-Total de CPU usada pelo processo: 0
-TaskManager - HenriDev ¯\_(ツ)_/¯

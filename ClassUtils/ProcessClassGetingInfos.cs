@@ -1,46 +1,15 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
+
+using TaskManage.ClassUtils;
+using TaskManage.WindowsInteropAPI;
 
 public class ProcessClassGetingInfos
 {
-    // Permissão usada para consultar o token do processo
-    const int TOKEN_QUERY = 0x0008;
-
-    // Classe de informação usada para verificar elevação (admin)
-    const int TokenElevation = 20;
-
-    // Estrutura que armazena contadores de I/O do processo (leitura/escrita em disco)
-    [StructLayout(LayoutKind.Sequential)]
-    struct IO_COUNTERS
-    {
-        public ulong ReadOperationCount;
-        public ulong WriteOperationCount;
-        public ulong OtherOperationCount;
-        public ulong ReadTransferCount;
-        public ulong WriteTransferCount;
-        public ulong OtherTransferCount;
-    }
-
-    // Importa função nativa do Windows para obter uso de disco do processo
-    [DllImport("Kernel32.dll", SetLastError = true)]
-    static extern bool GetProcessIoCounters(IntPtr ProcessHandle, out IO_COUNTERS counters);
-
-    // Abre o token de segurança do processo
-    [DllImport("advapi32.dll", SetLastError = true)]
-    static extern bool OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, out IntPtr TokenHandle);
-
-    // Obtém informações do token (usado aqui para verificar elevação/admin)
-    [DllImport("advapi32.dll", SetLastError = true)]
-    static extern bool GetTokenInformation(
-        IntPtr TokenHandle,
-        int TokenInformationClass,
-        out int TokenInformation,
-        int TokenInformationLength,
-        out int ReturnLength);
-
+    private ProcesseMemoryWorkInfos _memoryWorkInfos =  new ProcesseMemoryWorkInfos();
+    private ProcessDiskWorkInfos _diskWorkInfos = new ProcessDiskWorkInfos();
+    private ProcessProcessorWorkInfos _processorWorkInfos = new ProcessProcessorWorkInfos();
+    
     // Array com todas as instâncias do processo encontrado
     public Process[] process;
 
@@ -72,103 +41,16 @@ public class ProcessClassGetingInfos
     // Verifica se o processo está rodando com privilégios elevados (admin)
     private bool GetProcessIsadmin(Process process)
     {
-        if (!OpenProcessToken(process.Handle, TOKEN_QUERY, out var token))
+        if (!wiaProcessIO.OpenProcessToken(process.Handle, wiaProcessIO.TOKEN_QUERY, out var token))
             return false;
 
-        if (!GetTokenInformation(token, TokenElevation, out int elevation, sizeof(int), out _))
+        if (!wiaProcessIO.GetTokenInformation(token, wiaProcessIO.TokenElevation, out int elevation, sizeof(int), out _))
             return false;
 
         // Se elevation != 0, o processo está elevado
         return elevation != 0;
     }
-
-    // Calcula uso de CPU manualmente comparando tempo de CPU em um intervalo
-    private async Task<double> GetCpuUsageAsync(Process[] process)
-    {
-        double usoDeCPU = 0;
-
-        foreach (Process processItem in process)
-        {
-            try
-            {
-                processItem.Refresh();
-
-                TimeSpan StartCPUuSage = processItem.TotalProcessorTime;
-                DateTime StartTime = DateTime.Now;
-                await Task.Delay(1000);
-
-                processItem.Refresh();
-
-                TimeSpan EndCPUuSage = processItem.TotalProcessorTime;
-                DateTime EndTime = DateTime.Now;
-
-                // Calcula porcentagem considerando núcleos da CPU
-                usoDeCPU += ((EndCPUuSage - StartCPUuSage).TotalMilliseconds / (EndTime - StartTime).TotalMilliseconds) / Environment.ProcessorCount * 100;
-            }
-            catch (System.Exception)
-            { }
-        }
-        return usoDeCPU;
-    }
-
-    // Retorna uso total de memória física (Working Set) em MB
-    private double GetMemoryUsage(Process[] process)
-    {
-        double memoryTotalUsage = 0;
-
-        foreach (Process processItem in process)
-        {
-            processItem.Refresh();
-
-            // WorkingSet64 retorna bytes -> convertemos para MB
-            memoryTotalUsage += (processItem.WorkingSet64 / 1024 / 1024);
-        }
-
-        return memoryTotalUsage;
-    }
-
-    // Retorna vários tipos de memória do processo
-    private ProcessMemoryData GetProcessMemoryData(Process[] process)
-    {
-        double memoryPrivateUsage = 0;
-        double MemoryPhisickUsage = 0;
-        double MemoryVirtualUsage = 0;
-        double MemoryPagedUsage = 0;
-
-        foreach (Process processItem in process)
-        {
-            processItem.Refresh();
-
-            memoryPrivateUsage += (processItem.PrivateMemorySize64 / 1024 / 1024);
-            MemoryPhisickUsage += (processItem.WorkingSet64 / 1024 / 1024);
-            MemoryVirtualUsage += (processItem.VirtualMemorySize64 / 1024 / 1024);
-            MemoryPagedUsage += (processItem.PagedMemorySize64 / 1024 / 1024);
-        }
-
-        // Retorna struct preenchido com os dados
-        return new ProcessMemoryData()
-        {
-            ProcessMemoryPagedUsage = MemoryPagedUsage,
-            ProcessMemoryPhisyckUsage = MemoryPhisickUsage,
-            ProcessMemoryPrivateUsage = memoryPrivateUsage,
-            ProcessMemoryVirtualUsage = MemoryVirtualUsage
-        };
-    }
-
-    // Conta número total de threads do processo
-    private int GetThreadsCount(Process[] process)
-    {
-        int ProcessThreadsNumber = 0;
-
-        foreach (Process processItem in process)
-        {
-            processItem.Refresh();
-            ProcessThreadsNumber += processItem.Threads.Count;
-        }
-
-        return ProcessThreadsNumber;
-    }
-
+    
     // Conta módulos carregados pelo processo (DLLs, EXE etc.)
     private int GetModulesCount(Process[] process)
     {
@@ -182,77 +64,18 @@ public class ProcessClassGetingInfos
 
         return ProcessModulesNumber;
     }
-
-    // Obtém caminho do executável do processo
-    private string GetFileProcessPath()
-    {
-        try
-        {
-            string ProcessPath = (process.FirstOrDefault().MainModule).FileName;
-            return ProcessPath;
-        }
-        catch (System.AccessViolationException)
-        {
-            Console.WriteLine("O processo que o imbecil quis acessar é protegido pelo windows");
-        }
-        catch (System.InvalidOperationException)
-        {
-            Console.WriteLine("Ocorreu um erro interno dentro do programa");
-        }
-
-        return "Erro na procura do arquivo raiz do processo";
-    }
-
-    // Calcula taxa de leitura/escrita em disco do processo (MB/s)
-    private async Task<double> GetMbsUsageByProcessAsync(Process[] processes)
-    {
-        double MbsUsage = 0;
-
-        foreach (Process process in processes)
-        {
-            process.Refresh();
-
-            if (GetProcessIoCounters(process.Handle, out IO_COUNTERS cOUNTERS))
-            {
-                double MbsUsageByReadOld = cOUNTERS.ReadTransferCount;
-                double MbsUsageByWriteOld = cOUNTERS.WriteTransferCount;
-                DateTime Intervalo = DateTime.Now;
-
-                await Task.Delay(1000);
-                process.Refresh();
-
-                GetProcessIoCounters(process.Handle, out IO_COUNTERS cOUNTERSNow);
-                double MbsUsageByReadNow = cOUNTERSNow.ReadTransferCount;
-                double MbsUsageByWriteNow = cOUNTERSNow.WriteTransferCount;
-                DateTime INtervalo = DateTime.Now;
-
-                // Calcula taxa dividindo bytes pelo tempo e convertendo para MB
-                double MbsUsageByReadTotal = (MbsUsageByReadNow - MbsUsageByReadOld) / (INtervalo - Intervalo).TotalSeconds / 1024 / 1024;
-                double MbsUsageByWritenTotal = (MbsUsageByWriteNow - MbsUsageByWriteOld) / (INtervalo - Intervalo).TotalSeconds / 1024 / 1024;
-
-                MbsUsage += MbsUsageByReadTotal + MbsUsageByWritenTotal;
-            }
-            else
-            {
-                Console.WriteLine("Ocorreu um erro na leitura de bytes usados para leitura/gravação do processo.......");
-                return 0;
-            }
-        }
-
-        return MbsUsage;
-    }
-
+    
     // Retorna modelo básico do processo
     public async Task<ProcessModel> GetProcessStructAsync()
     {
         try
         {
             int Pid = process.FirstOrDefault().Id;
-            double MemoryUsage = GetMemoryUsage(process);
-            double CpuUsageRef = await GetCpuUsageAsync(process);;
+            double MemoryUsage = _memoryWorkInfos.GetMemoryUsage(process);
+            double CpuUsageRef = await _processorWorkInfos.GetCpuUsageAsync(process);;
             double InstancesNumber = process.Count();                        
             string ProcessName = processName;
-            string ProcessPath = GetFileProcessPath();
+            string ProcessPath = _diskWorkInfos.GetFileProcessPath(process);
 
             ProcessModel processStruct = new ProcessModel();
 
@@ -297,16 +120,16 @@ public class ProcessClassGetingInfos
         try
         {
             int Pid = process.FirstOrDefault().Id;
-            double CpuUsageRef = await GetCpuUsageAsync(process);
-            double MbsUsageRef = await GetMbsUsageByProcessAsync(process);
+            double CpuUsageRef = await _processorWorkInfos.GetCpuUsageAsync(process);
+            double MbsUsageRef = await _diskWorkInfos.GetMbsUsageByProcessAsync(process);
             double InstancesNumber = process.Length;
             int ModulesNumber = GetModulesCount(process);
-            int ThreadNumber = GetThreadsCount(process);
+            int ThreadNumber = _processorWorkInfos.GetThreadsCount(process);
             string ProcessName = processName;
-            string ProcessPath = GetFileProcessPath();
+            string ProcessPath = _diskWorkInfos.GetFileProcessPath(process);
             bool ProcessIsPrivilegied = GetProcessIsadmin(process.FirstOrDefault());
             DateTime startTimeProcess = process.FirstOrDefault().StartTime;
-            ProcessMemoryData memoryData = GetProcessMemoryData(process);
+            ProcessMemoryData memoryData = _memoryWorkInfos.GetProcessMemoryData(process);
             ProcessAdvancedModel advancedModel = new ProcessAdvancedModel();
 
             advancedModel.ProcessID = Pid;
