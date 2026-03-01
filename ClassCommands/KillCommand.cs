@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 public class KillCommand
 {
-    public void KillByName(string ProcessName)
+    public void KillByName(string ProcessName, bool NotQuestion = false)
     {
         var processoASerMatado = Process.GetProcessesByName(ProcessName);
         
@@ -21,20 +21,47 @@ public class KillCommand
         }
         else
         {
-            try
+            if (NotQuestion == false)
             {
-                processoASerMatado.ToList().ForEach(x => x.Kill());
-                return;
+                Console.WriteLine("Você deseja mesmo matar este processo?(S/N)");
+                var key = Console.ReadKey().Key;
+
+                if (key == ConsoleKey.S)
+                {
+                    try
+                    {
+                        processoASerMatado.ToList().ForEach(x => x.Kill());
+                        return;
+                    }
+                    catch (Win32Exception)
+                    {
+                        Console.WriteLine("Acesso negado, tais achando q eu posso matar um processo do sistema? sua bitch");
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Ok, N irei fechar o processo");
+                }
+
             }
-            catch (Win32Exception)
+            else
             {
-                Console.WriteLine("Acesso negado, tais achando q eu posso matar um processo do sistema? sua bitch");
-                return;
+                try
+                {
+                    processoASerMatado.ToList().ForEach(x => x.Kill());
+                    return;
+                }
+                catch (Win32Exception)
+                {
+                    Console.WriteLine("Acesso negado, tais achando q eu posso matar um processo do sistema? sua bitch");
+                    return;
+                }
             }
         }
     }
 
-    public void KillMultiProcessUsingNames(string ListOfNames)
+    public void KillMultiProcessUsingNames(string ListOfNames, bool NotQuestion = false)
     {
         if (String.IsNullOrWhiteSpace(ListOfNames))
         {
@@ -52,16 +79,36 @@ public class KillCommand
             {
                 string[] ProcessNames = ListOfNames.Split(',','(',')');
 
-                foreach (var ProcessName in ProcessNames)
+                if (NotQuestion)
                 {
-                    Console.WriteLine(ProcessName);
-                    KillByName(ProcessName);                    
+                    foreach (var ProcessName in ProcessNames)
+                    {
+                        KillByName(ProcessName);    
+                    }
                 }
+                else
+                {
+                    Console.WriteLine("Tem certeza que desejas matar estes processos?(S/N)");
+                    var key = Console.ReadKey().Key;
+                    if (key == ConsoleKey.S)
+                    {
+                        foreach (var ProcessName in ProcessNames)
+                        { 
+                            KillByName(ProcessName);    
+                        }                            
+                    }
+                    else
+                    {
+                        Console.WriteLine("Good Option");
+                        return;
+                    }
+                }
+                
             }    
         } 
     }
 
-    public void KillByProcessID(int ProcessID)
+    public void KillByProcessID(int ProcessID, bool NotQuestion = false)
     {
         if (ProcessID <= 0)
         {
@@ -72,7 +119,7 @@ public class KillCommand
         {
             if (Process.GetProcesses().Any(x => x.Id == ProcessID))
             {
-                KillByName(Process.GetProcessById(ProcessID).ProcessName);
+                KillByName(Process.GetProcessById(ProcessID).ProcessName, NotQuestion);
             }
             else
             {
